@@ -275,6 +275,64 @@ class ConfluenceDcStageHandlerTest extends WikiImportTestSupport {
         assertThat(wiki.page(again.targetPageId()).title).isEqualTo("장애 대응 절차");
     }
 
+    /**
+     * 받아 둔 첨부가 문서에서 사라졌으면 VERIFY가 잡는다. 제목·라벨만 보던 시절에는 "파일이
+     * 빠진 문서"가 그대로 성공으로 지나갔다.
+     */
+    @Test
+    void VERIFY는_받아_둔_첨부가_문서에_없으면_ERROR로_보고한다() {
+        dc.putPage("10001", "서비스 운영 가이드", null,
+                "<p>구성도</p><ac:image><ri:attachment ri:filename=\"topology.png\"/></ac:image>",
+                27, List.of(), List.of(FakeConfluenceDcServer.png("topology.png")),
+                FakeConfluenceDcServer.FakeRestrictions.none());
+        MigrationItem item = enqueue("10001", "27");
+        extract.handle(work(item, MigrationStage.EXTRACT, "27"));
+        normalize.handle(work(item, MigrationStage.NORMALIZE, "27"));
+        mediaCopy.handle(work(item, MigrationStage.MEDIA_COPY, "27"));
+        MigrationStageOutcome resolved = resolve.handle(work(item, MigrationStage.RESOLVE, "27"));
+        long pageId = resolved.targetPageId();
+        // 붙어 있는 동안에는 대조가 통과한다.
+        assertThat(codes(verify.handle(workWithPage(item, MigrationStage.VERIFY, "27", pageId))))
+                .doesNotContain(ConfluenceDcIssues.VERIFY_ATTACHMENT_MISMATCH);
+
+        wiki.removeAttachment(pageId, "topology.png");
+
+        MigrationStageOutcome outcome =
+                verify.handle(workWithPage(item, MigrationStage.VERIFY, "27", pageId));
+
+        assertThat(outcome.issues())
+                .anySatisfy(issue -> {
+                    assertThat(issue.code()).isEqualTo(ConfluenceDcIssues.VERIFY_ATTACHMENT_MISMATCH);
+                    assertThat(issue.sourcePath()).isEqualTo("attachment:topology.png");
+                });
+    }
+
+    /**
+     * 옮기려던 댓글보다 문서의 댓글이 적으면 VERIFY가 잡는다. 반대로 더 많은 것은 손실이 아니다 —
+     * 사람이 이관 뒤에 단 댓글이다.
+     */
+    @Test
+    void VERIFY는_옮기려던_댓글이_모자라면_ERROR로_보고한다() {
+        dc.putComments("10001", List.of(
+                FakeConfluenceDcServer.FakeComment.footer("c1", "<p>확인했습니다.</p>", "박댓글",
+                        "2026-02-01T00:00:00Z"),
+                FakeConfluenceDcServer.FakeComment.footer("c2", "<p>감사합니다.</p>", "김운영",
+                        "2026-02-02T00:00:00Z")));
+        MigrationItem item = enqueue("10001", "27");
+        extract.handle(work(item, MigrationStage.EXTRACT, "27"));
+        normalize.handle(work(item, MigrationStage.NORMALIZE, "27"));
+        MigrationStageOutcome resolved = resolve.handle(work(item, MigrationStage.RESOLVE, "27"));
+        long pageId = resolved.targetPageId();
+        assertThat(wiki.commentsOf(pageId)).hasSize(2);
+        assertThat(codes(verify.handle(workWithPage(item, MigrationStage.VERIFY, "27", pageId))))
+                .doesNotContain(ConfluenceDcIssues.VERIFY_COMMENT_COUNT_MISMATCH);
+
+        wiki.removeComment(wiki.commentsOf(pageId).get(0).id());
+
+        assertThat(codes(verify.handle(workWithPage(item, MigrationStage.VERIFY, "27", pageId))))
+                .contains(ConfluenceDcIssues.VERIFY_COMMENT_COUNT_MISMATCH);
+    }
+
     private List<String> codes(MigrationStageOutcome outcome) {
         return outcome.issues().stream().map(MigrationStageIssue::code).toList();
     }

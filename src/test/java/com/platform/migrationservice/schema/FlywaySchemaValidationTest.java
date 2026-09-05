@@ -29,6 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Flyway V1 ↔ JPA 엔티티 정합을 실제 Postgres로 검증한다.
@@ -175,6 +176,49 @@ class FlywaySchemaValidationTest extends WikiImportTestSupport {
                     assertThat(waiting.getClaimToken()).isNull();
                     assertThat(waiting.getLeaseExpiresAt()).isNull();
                 });
+    }
+
+    /**
+     * V2 — 잡 단위 손실(item_id NULL)이 저장되고, 같은 (job, issue_key)가 두 벌로 쌓이지 않는다.
+     *
+     * H2 스키마에는 부분 유니크 인덱스가 없어 여기서만 확인된다. 이 인덱스가 없으면 링크 정리가
+     * 실패할 때마다 같은 행이 새로 쌓여 보고서가 같은 말을 수십 번 반복한다.
+     */
+    @Test
+    void V2_잡_단위_손실은_항목_없이_저장되고_중복되지_않는다() {
+        MigrationJob job = jobs.saveAndFlush(MigrationJob.create(
+                MigrationProvider.CONFLUENCE_DC, "wiki.example.com", SPACE_ID, 1L,
+                MigrationJobMode.IMPORT));
+
+        issues.saveAndFlush(MigrationIssue.ofJob(job.getId(), MigrationIssueSeverity.ERROR,
+                "LINK_FIXUP_FAILED", "job:" + job.getId()));
+
+        assertThat(issues.findByJobIdAndItemIdIsNullOrderByIdAsc(job.getId()))
+                .singleElement()
+                .satisfies(issue -> {
+                    assertThat(issue.getItemId()).isNull();
+                    assertThat(issue.getCode()).isEqualTo("LINK_FIXUP_FAILED");
+                });
+
+        // 같은 (job, issue_key)를 한 번 더 넣으면 부분 유니크 인덱스가 막는다.
+        assertThatThrownBy(() -> issues.saveAndFlush(MigrationIssue.ofJob(job.getId(),
+                MigrationIssueSeverity.ERROR, "LINK_FIXUP_FAILED", "job:" + job.getId())))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    /** 잡을 지우면 잡 단위 손실도 함께 사라진다 — 항목 FK로는 닿지 않는 행이라 별도 FK가 필요했다. */
+    @Test
+    void V2_잡_단위_손실은_잡_삭제를_cascade로_따라간다() {
+        MigrationJob job = jobs.saveAndFlush(MigrationJob.create(
+                MigrationProvider.CONFLUENCE_DC, "wiki.example.com", SPACE_ID, 1L,
+                MigrationJobMode.IMPORT));
+        issues.saveAndFlush(MigrationIssue.ofJob(job.getId(), MigrationIssueSeverity.ERROR,
+                "LINK_FIXUP_FAILED", "page:9001"));
+
+        jobs.deleteById(job.getId());
+        jobs.flush();
+
+        assertThat(issues.count()).isZero();
     }
 
     /**

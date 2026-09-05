@@ -14,6 +14,12 @@ public interface MigrationIssueRepository extends JpaRepository<MigrationIssue, 
 
     Optional<MigrationIssue> findByItemIdAndIssueKey(Long itemId, String issueKey);
 
+    /** 잡 단위 손실(항목 없음)의 중복 판정. */
+    Optional<MigrationIssue> findByJobIdAndItemIdIsNullAndIssueKey(Long jobId, String issueKey);
+
+    /** 잡 상세 화면이 보여 줄 잡 단위 손실 — 항목 표에는 나오지 않는 것들이다. */
+    List<MigrationIssue> findByJobIdAndItemIdIsNullOrderByIdAsc(Long jobId);
+
     /**
      * 한 항목의 정규화 손실 기록을 지운다. MEDIA_COPY가 자산을 해결한 뒤 IR을 다시 만들면
      * 두 번째 결과가 정본이라, 첫 패스가 남긴 "못 옮겼다"를 남겨 두면 보고서가 거짓말을 한다.

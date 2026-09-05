@@ -70,6 +70,13 @@ public final class ConfluenceDcIssues {
     public static final String VERIFY_TYPE_MISMATCH = "VERIFY_TYPE_MISMATCH";
     public static final String VERIFY_BODY_EMPTY = "VERIFY_BODY_EMPTY";
     public static final String VERIFY_LABEL_MISMATCH = "VERIFY_LABEL_MISMATCH";
+    /**
+     * 받아 둔 첨부가 대상 문서에 없다. 업로드가 실패했거나 사람이 지웠다 — 어느 쪽이든
+     * "옮겼는데 파일이 없다"이므로 보고서에 남는다.
+     */
+    public static final String VERIFY_ATTACHMENT_MISMATCH = "VERIFY_ATTACHMENT_MISMATCH";
+    /** 옮기려던 댓글 수보다 문서의 댓글이 적다 — 대화 일부가 넘어오지 못했다. */
+    public static final String VERIFY_COMMENT_COUNT_MISMATCH = "VERIFY_COMMENT_COUNT_MISMATCH";
     public static final String VERIFY_MARKDOWN_MISSING = "VERIFY_MARKDOWN_MISSING";
 
     /** 이 job에 원본 접속 정보가 없다 — 잡 생성이 잘못됐다. */

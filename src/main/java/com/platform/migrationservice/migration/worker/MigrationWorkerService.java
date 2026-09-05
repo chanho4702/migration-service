@@ -2,6 +2,7 @@ package com.platform.migrationservice.migration.worker;
 
 import com.platform.migrationservice.migration.confluence.link.MigrationLinkFixupService;
 import com.platform.migrationservice.migration.model.MigrationIssue;
+import com.platform.migrationservice.migration.model.MigrationIssueSeverity;
 import com.platform.migrationservice.migration.model.MigrationItem;
 import com.platform.migrationservice.migration.model.MigrationItemStatus;
 import com.platform.migrationservice.migration.model.MigrationJob;
@@ -49,6 +50,7 @@ public class MigrationWorkerService {
     private final MigrationRetryPolicy retryPolicy;
     private final MigrationWorkerProperties properties;
     private final MigrationLinkFixupService linkFixup;
+    private final MigrationJobIssueWriter jobIssues;
 
     /**
      * 처리할 item 하나를 점유한다. 같은 item을 두 노드가 동시에 노리면 조건부 UPDATE에서 한쪽만
@@ -187,11 +189,18 @@ public class MigrationWorkerService {
         });
     }
 
+    /**
+     * pass 전체가 터진 경우다(문서별 실패는 pass 안에서 따로 기록한다). 잡의 결말은 바꾸지 않되
+     * 보고서에는 남긴다 — 로그로만 두면 "완료"인데 문서 사이 링크가 원본 사이트로 튕기는 상태를
+     * 관리자가 알 길이 없다. 고친 뒤 `POST /api/migration/{id}/link-fixup`으로 다시 돌린다.
+     */
     private void runLinkFixup(long jobId) {
         try {
             linkFixup.run(jobId);
         } catch (RuntimeException exception) {
             log.warn("이관 링크 정리에 실패했다 — 잡 결과는 그대로 둔다: job={}", jobId, exception);
+            jobIssues.record(jobId, MigrationIssueSeverity.ERROR,
+                    MigrationJobIssueWriter.LINK_FIXUP_FAILED, "job:" + jobId);
         }
     }
 

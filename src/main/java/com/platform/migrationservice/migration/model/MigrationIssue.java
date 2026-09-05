@@ -35,7 +35,11 @@ public class MigrationIssue {
     @Column(name = "job_id", nullable = false, updatable = false)
     private Long jobId;
 
-    @Column(name = "item_id", nullable = false, updatable = false)
+    /**
+     * 이 손실이 난 항목. **잡 단위 실패는 NULL이다**(링크 정리 pass처럼 어느 항목에도 매달 수
+     * 없는 실패) — 그때 중복은 부분 유니크 인덱스가 막는다(V2).
+     */
+    @Column(name = "item_id", updatable = false)
     private Long itemId;
 
     @Column(name = "issue_key", nullable = false, length = 64, updatable = false)
@@ -71,6 +75,22 @@ public class MigrationIssue {
         MigrationIssue issue = new MigrationIssue();
         issue.jobId = MigrationSourceKey.require(jobId, "jobId");
         issue.itemId = MigrationSourceKey.require(itemId, "itemId");
+        issue.severity = MigrationSourceKey.require(severity, "severity");
+        issue.code = MigrationSourceKey.requireText(code, "code", 128);
+        issue.sourcePath = MigrationSourceKey.requireText(sourcePath, "sourcePath", 1024);
+        issue.issueKey = MigrationSourceKey.issue(issue.code, issue.sourcePath);
+        issue.occurrenceCount = 1;
+        return issue;
+    }
+
+    /**
+     * 잡 단위 손실. 항목이 없다는 것이 이 팩토리의 전부다 — 링크 정리처럼 잡이 끝난 뒤
+     * 커밋 밖에서 도는 일의 실패가 여기로 온다.
+     */
+    public static MigrationIssue ofJob(Long jobId, MigrationIssueSeverity severity,
+                                       String code, String sourcePath) {
+        MigrationIssue issue = new MigrationIssue();
+        issue.jobId = MigrationSourceKey.require(jobId, "jobId");
         issue.severity = MigrationSourceKey.require(severity, "severity");
         issue.code = MigrationSourceKey.requireText(code, "code", 128);
         issue.sourcePath = MigrationSourceKey.requireText(sourcePath, "sourcePath", 1024);

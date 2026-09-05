@@ -9,6 +9,7 @@ import com.platform.migrationservice.migration.confluence.dc.ConfluenceDcCodes;
 import com.platform.migrationservice.migration.confluence.dc.ConfluenceDcCredentials;
 import com.platform.migrationservice.migration.confluence.dc.ConfluenceDcDiscoveryService;
 import com.platform.migrationservice.migration.confluence.dc.ConfluenceSpaceProbe;
+import com.platform.migrationservice.migration.confluence.link.MigrationLinkFixupService;
 import com.platform.migrationservice.migration.dto.ConfluenceDcProbeRequest;
 import com.platform.migrationservice.migration.dto.ConfluenceDcProbeResponse;
 import com.platform.migrationservice.migration.dto.MigrationDiscoverResponse;
@@ -18,6 +19,8 @@ import com.platform.migrationservice.migration.dto.MigrationItemResponse;
 import com.platform.migrationservice.migration.dto.MigrationJobCounts;
 import com.platform.migrationservice.migration.dto.MigrationJobCreateRequest;
 import com.platform.migrationservice.migration.dto.MigrationJobDetailResponse;
+import com.platform.migrationservice.migration.dto.MigrationJobIssueResponse;
+import com.platform.migrationservice.migration.dto.MigrationLinkFixupResponse;
 import com.platform.migrationservice.migration.dto.MigrationJobSummary;
 import com.platform.migrationservice.migration.dto.MigrationSourceSummary;
 import com.platform.migrationservice.migration.model.MigrationItem;
@@ -85,6 +88,7 @@ public class MigrationJobService {
     private final PermissionClient permissions;
     private final ConfluenceDcClient dcClient;
     private final ConfluenceDcDiscoveryService discovery;
+    private final MigrationLinkFixupService linkFixup;
 
     /**
      * 원본에 붙을 수 있는지 확인한다. 여기서만 stage 코드를 HTTP 상태로 바꾼다 — worker 밖에서
@@ -175,7 +179,31 @@ public class MigrationJobService {
         return MigrationJobDetailResponse.of(
                 MigrationJobResponse.from(job, items.countByJobId(jobId)),
                 sources.findById(jobId).map(MigrationSourceSummary::from).orElse(null),
-                new MigrationJobCounts(statusCounts(jobId), stageCounts(jobId)));
+                new MigrationJobCounts(statusCounts(jobId), stageCounts(jobId)),
+                issues.findByJobIdAndItemIdIsNullOrderByIdAsc(jobId).stream()
+                        .map(MigrationJobIssueResponse::from)
+                        .toList());
+    }
+
+    /**
+     * 링크 정리를 다시 돌린다. 잡이 끝난 뒤 도는 pass라 위키가 잠깐 죽으면 통째로 실패할 수
+     * 있는데, 그때 옮긴 문서 수백 건을 다시 이관할 수는 없다 — 정리만 따로 다시 돌린다.
+     *
+     * 끝난 잡에만 연다. 진행 중에 돌리면 아직 안 만들어진 문서를 가리키는 임시 링크가 "끝내 못
+     * 찾음"으로 확정되어 원본 URL로 되돌아간다.
+     *
+     * 트랜잭션을 열지 않는 이유는 discover와 같다 — 문서마다 위키를 왕복하는 동안 잡 행을 잡고
+     * 있으면 안 되고, 문서 하나의 실패가 나머지 정리를 무르면 안 된다.
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public MigrationLinkFixupResponse rerunLinkFixup(long userId, long jobId) {
+        MigrationJob job = requireJob(userId, jobId);
+        if (job.getStatus() != MigrationJobStatus.COMPLETED
+                && job.getStatus() != MigrationJobStatus.FAILED) {
+            throw new ConflictException("끝난 작업에만 링크 정리를 다시 돌릴 수 있습니다: " + job.getStatus());
+        }
+        MigrationLinkFixupService.Result result = linkFixup.run(jobId);
+        return new MigrationLinkFixupResponse(jobId, result.touched(), result.failed());
     }
 
     /**

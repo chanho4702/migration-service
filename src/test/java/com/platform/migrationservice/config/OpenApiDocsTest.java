@@ -101,7 +101,7 @@ class OpenApiDocsTest extends WikiImportTestSupport {
             }
         }
         // 컨트롤러가 통째로 스캔에서 빠지는 회귀(예: springdoc 패키지 스캔 설정 실수)를 잡는다.
-        assertThat(operations).isGreaterThanOrEqualTo(10);
+        assertThat(operations).isGreaterThanOrEqualTo(11);
     }
 
     /**
@@ -224,6 +224,8 @@ class OpenApiDocsTest extends WikiImportTestSupport {
         assertThat(spec.at("/paths/~1api~1migration~1{jobId}~1items/post/responses/409").isMissingNode())
                 .isFalse();
         assertThat(spec.at("/paths/~1api~1migration~1{jobId}~1discover/post/responses/409").isMissingNode())
+                .isFalse();
+        assertThat(spec.at("/paths/~1api~1migration~1{jobId}~1link-fixup/post/responses/409").isMissingNode())
                 .isFalse();
 
         // 조회에는 충돌할 상태가 없다.

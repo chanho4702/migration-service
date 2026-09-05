@@ -298,6 +298,45 @@ class ConfluenceDcPipelineTest extends WikiImportTestSupport {
         assertThat(wiki.page(pageId).attachments).allSatisfy(file -> assertThat(file.version).isEqualTo(1));
     }
 
+    /**
+     * 문서를 만든 **뒤** 실패해도 재시도가 문서를 하나 더 만들지 않는다.
+     *
+     * 이관에서 가장 되돌리기 어려운 사고가 이 중복이다. 첨부 업로드에서 위키가 한 번 죽으면
+     * 문서는 이미 위키에 있는데 단계는 실패로 끝나는데, 그때 이관 원장이 비어 있으면 재시도가
+     * "옮긴 적 없다"로 보고 같은 원본을 다시 만든다. 원장을 문서 생성 직후에 못박아 막는다.
+     */
+    @Test
+    void 첨부_업로드가_한_번_실패해도_재시도가_문서를_두_벌로_만들지_않는다() {
+        seedAttachmentPage();
+        MigrationJob job = importJob();
+        discovery.discover(job.getId(), NOW);
+        migrations.start(ADMIN, job.getId(), NOW);
+        // 문서는 만들어지고 첫 첨부 업로드에서 위키가 죽는다.
+        wiki.failNextWith(503, "/attachments");
+        worker.drain(job.getId(), 100, () -> NOW);
+
+        // 재시도 전: 문서는 이미 있고 항목은 재시도 대기다.
+        assertThat(wiki.pageCount()).isEqualTo(1);
+        MigrationItem waiting = items.findByJobIdAndSourceKey(job.getId(),
+                MigrationItem.sourceKeyFor("10001")).orElseThrow();
+        assertThat(waiting.getStatus()).isEqualTo(MigrationItemStatus.RETRY_WAIT);
+        assertThat(waiting.getLastErrorCode()).isEqualTo("WIKI_IMPORT_UNAVAILABLE");
+
+        // 백오프가 지난 뒤 재시도 — 같은 문서를 갱신 경로로 마저 마무리한다.
+        worker.drain(job.getId(), 100, () -> NOW.plusSeconds(120));
+
+        assertThat(jobs.findById(job.getId()).orElseThrow().getStatus())
+                .isEqualTo(MigrationJobStatus.COMPLETED);
+        assertThat(wiki.pageCount()).isEqualTo(1);
+        FakeWikiImportServer.FakePage page = wiki.pageTitled("서비스 운영 가이드");
+        assertThat(page.attachments).extracting(file -> file.filename)
+                .containsExactlyInAnyOrder("topology.png", "runbook.pdf");
+        // 재시도가 갱신 경로를 탔으므로 리비전이 하나 더 쌓인다 — 중복 문서보다 훨씬 싼 대가다.
+        assertThat(page.revisions).hasSize(2);
+        // 대조도 통과한다: 받아 둔 첨부가 전부 문서에 붙었다.
+        assertThat(issueCodes(job.getId())).doesNotContain("VERIFY_ATTACHMENT_MISMATCH");
+    }
+
     // -- M2 4.2 링크 재작성 -------------------------------------------
 
     @Test
@@ -340,6 +379,39 @@ class ConfluenceDcPipelineTest extends WikiImportTestSupport {
         worker.drain(second.getId(), 100, () -> NOW);
 
         assertThat(wiki.page(rootId).revisions).hasSize(before);
+    }
+
+    /**
+     * 링크 정리가 실패하면 잡에 남는다 — 로그로만 두면 보고서는 "완료"인데 문서 사이 링크는
+     * 원본 사이트로 튕긴다. 그리고 고친 뒤 정리만 따로 다시 돌릴 수 있다.
+     */
+    @Test
+    void 링크_정리_실패는_잡에_남고_따로_다시_돌릴_수_있다() {
+        seedLinkedPages();
+        MigrationJob job = importJob();
+        discovery.discover(job.getId(), NOW);
+        migrations.start(ADMIN, job.getId(), NOW);
+        // 정리 pass가 본문을 다시 쓰려는 순간 위키가 죽는다.
+        wiki.failNextWith(503, "/content");
+        worker.drain(job.getId(), 100, () -> NOW);
+
+        // 옮기기 자체는 끝났다 — 정리 실패가 잡의 결말을 바꾸지는 않는다.
+        assertThat(jobs.findById(job.getId()).orElseThrow().getStatus())
+                .isEqualTo(MigrationJobStatus.COMPLETED);
+        FakeWikiImportServer.FakePage root = wiki.pageTitled("서비스 운영 가이드");
+        assertThat(root.content).contains("dc-page:");
+
+        // 실패가 보고서에 남는다(항목 표가 아니라 잡 단위로).
+        assertThat(migrations.detail(ADMIN, job.getId()).jobIssues())
+                .extracting(issue -> issue.code())
+                .contains("LINK_FIXUP_FAILED");
+
+        // 위키가 돌아온 뒤 정리만 다시 돌린다 — 옮긴 문서를 다시 이관하지 않는다.
+        assertThat(migrations.rerunLinkFixup(ADMIN, job.getId()).touched()).isEqualTo(1);
+        assertThat(wiki.page(root.id).content).doesNotContain("dc-page:");
+
+        // 다시 눌러도 안전하다 — 고칠 것이 없으면 손대지 않는다.
+        assertThat(migrations.rerunLinkFixup(ADMIN, job.getId()).touched()).isZero();
     }
 
     // -- M2 4.3 페이지 제한 -------------------------------------------

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.migrationservice.migration.MigrationPayloadStore;
 import com.platform.migrationservice.migration.confluence.ImportedPageWriter;
+import com.platform.migrationservice.migration.confluence.comment.MigrationCommentPayload;
+import com.platform.migrationservice.migration.confluence.media.MigrationMediaManifest;
 import com.platform.migrationservice.migration.model.MigrationPayloadKind;
 import com.platform.migrationservice.migration.model.MigrationProvider;
 import com.platform.migrationservice.migration.model.MigrationStage;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -111,7 +114,84 @@ public class ConfluenceDcVerifyHandler implements MigrationStageHandler {
         if (expectedLabels.size() != page.get().labels().size()) {
             issues.add(MigrationStageIssue.error(ConfluenceDcIssues.VERIFY_LABEL_MISMATCH, reference));
         }
+        issues.addAll(verifyAttachments(work, page.get()));
+        issues.addAll(verifyComments(work, page.get(), reference));
         return MigrationStageOutcome.page(pageId, issues);
+    }
+
+    /**
+     * 받아 둔 첨부가 실제로 문서에 붙었는가. 대조 키는 checksum이다 — 파일명은 같은데 내용이
+     * 다른 경우까지 잡아야 "옮겼다"가 사실이 된다.
+     *
+     * 개수를 견주지 않고 **포함 관계**를 본다. 사람이 이관 뒤에 파일을 더 올렸을 수 있고,
+     * 그건 손실이 아니다. 우리가 받아 둔 것이 빠졌을 때만 보고한다.
+     */
+    private List<MigrationStageIssue> verifyAttachments(MigrationStageWork work,
+                                                        WikiImportApi.ImportedPageView page) {
+        List<MigrationMediaManifest.Entry> staged = manifest(work.itemId()).files();
+        if (staged.isEmpty()) {
+            return List.of();
+        }
+        Set<String> actual = new LinkedHashSet<>();
+        for (WikiImportApi.AttachmentView attachment : page.attachments()) {
+            if (attachment.checksum() != null) {
+                actual.add(attachment.checksum().toLowerCase(Locale.ROOT));
+            }
+        }
+        List<MigrationStageIssue> issues = new ArrayList<>();
+        for (MigrationMediaManifest.Entry entry : staged) {
+            String checksum = entry.checksum() == null ? "" : entry.checksum().toLowerCase(Locale.ROOT);
+            if (!actual.contains(checksum)) {
+                issues.add(MigrationStageIssue.error(ConfluenceDcIssues.VERIFY_ATTACHMENT_MISMATCH,
+                        "attachment:" + entry.filename()));
+            }
+        }
+        return issues;
+    }
+
+    /**
+     * 옮기려던 댓글이 다 달렸는가.
+     *
+     * 여기서도 같음이 아니라 **적지 않음**을 본다. 사람이 이관 뒤 댓글을 달았을 수 있고, 재이관은
+     * 이미 단 댓글을 건너뛰므로 실제 수가 더 클 수 있다. 빈 본문 댓글은 애초에 옮기지 않으므로
+     * 기대치에서도 뺀다 — 그러지 않으면 멀쩡한 이관마다 어긋남이 뜬다.
+     */
+    private List<MigrationStageIssue> verifyComments(MigrationStageWork work,
+                                                     WikiImportApi.ImportedPageView page,
+                                                     String reference) {
+        long expected = comments(work.itemId()).comments().stream()
+                .filter(entry -> entry.markdown() != null && !entry.markdown().isBlank())
+                .count();
+        if (expected == 0 || page.commentCount() >= expected) {
+            return List.of();
+        }
+        return List.of(MigrationStageIssue.error(
+                ConfluenceDcIssues.VERIFY_COMMENT_COUNT_MISMATCH, reference));
+    }
+
+    /** 목록을 못 읽으면 비어 있는 것으로 본다 — 대조를 못 한다고 항목을 실패시키지는 않는다. */
+    private MigrationMediaManifest manifest(long itemId) {
+        return payloads.read(itemId, MigrationPayloadKind.MEDIA_MANIFEST)
+                .map(payload -> {
+                    try {
+                        return objectMapper.readValue(payload.body(), MigrationMediaManifest.class);
+                    } catch (JsonProcessingException exception) {
+                        return MigrationMediaManifest.empty();
+                    }
+                })
+                .orElseGet(MigrationMediaManifest::empty);
+    }
+
+    private MigrationCommentPayload comments(long itemId) {
+        return payloads.read(itemId, MigrationPayloadKind.COMMENTS)
+                .map(payload -> {
+                    try {
+                        return objectMapper.readValue(payload.body(), MigrationCommentPayload.class);
+                    } catch (JsonProcessingException exception) {
+                        return MigrationCommentPayload.empty();
+                    }
+                })
+                .orElseGet(MigrationCommentPayload::empty);
     }
 
     private JsonNode parse(String body) {

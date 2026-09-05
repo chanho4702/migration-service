@@ -39,6 +39,7 @@ FK도 없다.
 | POST | `/api/migration/{jobId}/start`, `/cancel` | 대상 스페이스 ADMIN |
 | GET | `/api/migration/{jobId}` | 대상 스페이스 ADMIN |
 | GET | `/api/migration/{jobId}/items?status=&stage=&page=` | 대상 스페이스 ADMIN |
+| POST | `/api/migration/{jobId}/link-fixup` | 대상 스페이스 ADMIN |
 | GET | `/api/migration/{jobId}/report` | 대상 스페이스 ADMIN |
 
 오류는 `{"error": 메시지}`(common-starter). org-service나 위키가 닿지 않으면 503이고, 그 밖의 권한
@@ -167,6 +168,21 @@ M1~M3로 파이프라인이 실제로 돈다. 관리 화면은 wiki-front `/admi
 **재실행·멱등 규칙**: 같은 원본 페이지(id+version)는 한 번만 만든다. 원본이 바뀌어 checksum이
 달라지면 제목·본문·라벨을 갱신하고 새 리비전("컨플루언스 재이관 v{n}")을 남긴다. 첨부는 같은
 checksum이면 위키가 `UNCHANGED`로 답해 버전을 쌓지 않고, 댓글·이력은 최초 이관에만 만든다.
+
+### 장애·재실행
+
+- **문서 중복 방지**: 문서를 만든 **직후** 이관 원장에 대상 id를 못박는다(즉시 커밋). 그 뒤 첨부·
+  제한·댓글에서 위키가 죽어 단계가 실패해도, 재시도는 같은 문서를 갱신 경로로 마저 마무리한다 —
+  원장을 마지막에 쓰면 재시도가 "옮긴 적 없다"로 보고 같은 원본으로 문서를 하나 더 만든다.
+  재시도 비용은 리비전 한 줄이고, 첨부는 `UNCHANGED`·댓글은 존재 확인·제한은 통째 교체라 멱등이다.
+- **링크 정리 실패 가시화**: 잡이 끝난 뒤 도는 링크 정리는 실패해도 잡의 결말을 바꾸지 않지만,
+  이제 조용히 지나가지도 않는다 — 문서별·pass 전체 실패가 `LINK_FIXUP_FAILED`(ERROR)로 잡에
+  남고 잡 상세의 `jobIssues`에 뜬다. 고친 뒤 `POST /api/migration/{jobId}/link-fixup`으로 정리만
+  다시 돌린다(끝난 잡만, 다시 눌러도 안전).
+- **VERIFY 대조 확장**: 제목·종류·본문·라벨에 더해 **첨부**(받아 둔 checksum이 문서에 다 있는가)와
+  **댓글 수**(옮기려던 수보다 적지 않은가)를 대조해 `VERIFY_ATTACHMENT_MISMATCH`·
+  `VERIFY_COMMENT_COUNT_MISMATCH`로 보고한다. 개수가 아니라 포함 관계를 보므로, 사람이 이관 뒤
+  더한 파일·댓글은 손실로 잡히지 않는다.
 
 **옮겨지는 것 / 아닌 것**
 

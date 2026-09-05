@@ -147,14 +147,21 @@ public class ConfluenceDcResolveHandler implements MigrationStageHandler {
             issues.addAll(result.issues());
         }
 
+        // 문서가 생긴 **직후** 원장에 못박는다. 아래 첨부·제한·댓글은 위키가 잠깐 죽기만 해도
+        // 재시도 실패로 올라오는데, 그때 원장이 비어 있으면 재시도가 같은 원본으로 문서를 하나
+        // 더 만든다. checksum은 아직 넣지 않으므로 재시도는 이 문서를 갱신 경로로 마저 마무리한다.
+        objectMappings.bindTargetPage(work.provider(), work.sourceInstanceId(),
+                work.externalObjectId(), pageId, work.jobId());
+
         issues.addAll(attachBody(work, pageId, linked.markdown()));
         issues.addAll(restrictionApplier.apply(snapshot, pageId, actorId));
         // 댓글은 문서·첨부·제한이 모두 자리를 잡은 뒤에 단다(M3 §5.2). 제한을 먼저 걸어야
         // 옮긴 대화가 원본과 같은 사람들에게만 보인다.
         issues.addAll(commentImporter.importComments(work, pageId, actorId));
 
-        // object map은 여기서 바로 갱신한다. worker는 DONE에 닿을 때 한 번 더 부르는데(멱등),
-        // 그 사이의 VERIFY가 실패해 재시도되면 이 항목의 자식들이 부모를 못 찾는다.
+        // 마무리 — 여기서야 checksum이 들어가고, 그때부터 재실행이 "이미 옮겼다"로 건너뛴다.
+        // worker는 DONE에 닿을 때 한 번 더 부르는데(멱등), 그 사이의 VERIFY가 실패해 재시도되면
+        // 이 항목의 자식들이 부모를 못 찾는다.
         objectMappings.upsert(work.provider(), work.sourceInstanceId(), work.externalObjectId(),
                 work.sourceVersion(), work.sourceChecksum(), pageId, work.jobId());
         return MigrationStageOutcome.page(pageId, issues);

@@ -9,6 +9,7 @@ import com.platform.migrationservice.migration.dto.MigrationItemResponse;
 import com.platform.migrationservice.migration.dto.MigrationJobCreateRequest;
 import com.platform.migrationservice.migration.dto.MigrationJobDetailResponse;
 import com.platform.migrationservice.migration.dto.MigrationJobSummary;
+import com.platform.migrationservice.migration.dto.MigrationLinkFixupResponse;
 import com.platform.migrationservice.migration.model.MigrationItemStatus;
 import com.platform.migrationservice.migration.model.MigrationStage;
 import com.platform.migrationservice.migration.report.MigrationJobResponse;
@@ -122,6 +123,18 @@ public class MigrationController {
                                            @Parameter(description = "0부터 세는 페이지 번호")
                                            @RequestParam(defaultValue = "0") int page) {
         return migrations.listItems(userId(jwt), jobId, status, stage, page);
+    }
+
+    /**
+     * 잡이 끝난 뒤 도는 링크 정리만 다시 돌린다. 옮긴 문서를 다시 이관하지 않는다 —
+     * 이미 정리된 문서에는 임시 링크가 없어 손대지 않으므로 다시 눌러도 안전하다.
+     */
+    @Operation(summary = "끝난 작업의 링크 정리를 다시 돌린다 — 다시 눌러도 안전하다")
+    @ApiFailures("409")
+    @PostMapping("/{jobId}/link-fixup")
+    public MigrationLinkFixupResponse rerunLinkFixup(@AuthenticationPrincipal Jwt jwt,
+                                                     @PathVariable long jobId) {
+        return migrations.rerunLinkFixup(userId(jwt), jobId);
     }
 
     @Operation(summary = "이관 결과 보고서를 조회한다")

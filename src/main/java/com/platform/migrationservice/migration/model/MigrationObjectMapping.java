@@ -88,6 +88,14 @@ public class MigrationObjectMapping {
      * 이관한 댓글 한 건의 매핑(M3). externalObjectId는 {@code comment:{원본 id}}라 같은 원본의
      * 페이지 매핑과 키가 겹치지 않는다.
      */
+    /** 문서를 막 만들었을 때의 행 — 아직 마무리 전이라 checksum 자리는 {@link #PENDING_CHECKSUM}이다. */
+    public static MigrationObjectMapping createPending(MigrationProvider provider, String sourceInstanceId,
+                                                       String externalObjectId, Long targetPageId,
+                                                       Long lastJobId) {
+        return create(provider, sourceInstanceId, externalObjectId, null, PENDING_CHECKSUM,
+                targetPageId, lastJobId);
+    }
+
     public static MigrationObjectMapping createComment(MigrationProvider provider, String sourceInstanceId,
                                                        String externalObjectId, String sourceChecksum,
                                                        Long targetCommentId, Long lastJobId) {
@@ -108,6 +116,23 @@ public class MigrationObjectMapping {
     /** 댓글 매핑의 외부 키 — 페이지 id와 같은 숫자를 써도 겹치지 않게 접두어를 붙인다. */
     public static String commentObjectId(String sourceCommentId) {
         return "comment:" + sourceCommentId;
+    }
+
+    /**
+     * 문서는 만들었지만 뒤 단계(첨부·제한·댓글)가 아직 끝나지 않았다는 표시.
+     *
+     * 어떤 원본의 SHA-256도 이 값이 될 수 없으므로, 이 checksum이 남아 있으면 재실행은 늘
+     * "원본이 바뀌었다"로 보고 같은 문서를 갱신 경로로 다시 마무리한다.
+     */
+    public static final String PENDING_CHECKSUM = "0".repeat(64);
+
+    /**
+     * 대상 문서만 먼저 묶는다. **checksum은 건드리지 않는다** — 그래야 뒤 단계가 실패했을 때
+     * 재시도가 "이미 다 옮겼다"로 착각하지 않고 같은 문서를 갱신 경로로 마무리한다.
+     */
+    public void bindTargetPage(Long targetPageId, Long lastJobId) {
+        this.targetPageId = MigrationSourceKey.require(targetPageId, "targetPageId");
+        this.lastJobId = MigrationSourceKey.require(lastJobId, "lastJobId");
     }
 
     public void update(String sourceVersion, String sourceChecksum, Long targetPageId, Long lastJobId) {

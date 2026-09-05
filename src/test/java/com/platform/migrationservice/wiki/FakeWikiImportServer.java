@@ -55,6 +55,9 @@ public class FakeWikiImportServer {
     /** 0이 아니면 다음 요청 한 건을 이 상태로 거절한다 — 장애 전파를 태우는 스위치다. */
     private volatile int failNextStatus;
 
+    /** 비어 있지 않으면 경로에 이 조각이 든 요청만 거절한다(예: "/attachments"). */
+    private volatile String failNextPath = "";
+
     public FakeWikiImportServer() {
         try {
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -82,11 +85,23 @@ public class FakeWikiImportServer {
         comments.clear();
         lastActorId = null;
         failNextStatus = 0;
+        failNextPath = "";
     }
 
     /** 다음 요청 한 건만 이 상태로 거절한다(예: 503 — 위키가 잠깐 죽은 상황). */
     public void failNextWith(int status) {
+        failNextWith(status, "");
+    }
+
+    /**
+     * 경로에 {@code pathFragment}가 든 다음 요청 한 건만 거절한다.
+     *
+     * 단계 중간의 한 호출만 골라 죽이려면 이 형태가 필요하다 — RESOLVE는 문서 생성·첨부 업로드·
+     * 댓글을 잇달아 부르므로, 무조건 다음 한 건을 죽이면 어느 것이 죽는지가 순서에 달린다.
+     */
+    public void failNextWith(int status, String pathFragment) {
         failNextStatus = status;
+        failNextPath = pathFragment == null ? "" : pathFragment;
     }
 
     /** 대상 스페이스 하나를 심는다. 이관은 이미 있는 스페이스로만 들어간다. */
@@ -129,6 +144,16 @@ public class FakeWikiImportServer {
         page(pageId).title = title;
     }
 
+    /** 사람이 첨부를 지운 상황을 만든다(VERIFY 첨부 대조 시나리오). */
+    public void removeAttachment(long pageId, String filename) {
+        page(pageId).attachments.removeIf(attachment -> attachment.filename.equals(filename));
+    }
+
+    /** 사람이 댓글을 지운 상황을 만든다(VERIFY 댓글 수 대조·재실행 시나리오). */
+    public void removeComment(long commentId) {
+        comments.remove(commentId);
+    }
+
     /** 같은 제목의 문서를 하나 더 심는다 — 제목 링크 모호 판정을 태우는 자리다. */
     public long putPage(long spaceId, String title, String content) {
         long id = pageIds.incrementAndGet();
@@ -161,8 +186,9 @@ public class FakeWikiImportServer {
             lastActorId = Long.parseLong(actor);
 
             int forced = failNextStatus;
-            if (forced != 0) {
+            if (forced != 0 && exchange.getRequestURI().getPath().contains(failNextPath)) {
                 failNextStatus = 0;
+                failNextPath = "";
                 respondError(exchange, forced, "위키가 지금은 응답할 수 없습니다");
                 return;
             }
