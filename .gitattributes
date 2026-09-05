@@ -1,0 +1,4 @@
+# 골든 파일은 줄바꿈까지 포함해 바이트로 대조한다(DocumentIrMarkdownWriterTest).
+# 윈도우 개발기(core.autocrlf=true)에서 새로 클론하면 CRLF로 받아 골든 대조가 깨진다 — 리눅스 CI는 LF라
+# CI만 보면 드러나지 않는다. 이 디렉터리만 LF로 못박는다(wiki-backend에서 옮겨 온 규칙).
+src/test/resources/fixtures/migration/confluence/golden/** text eol=lf
