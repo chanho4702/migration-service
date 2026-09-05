@@ -2,5 +2,5 @@
 FROM eclipse-temurin:24-jre
 WORKDIR /app
 COPY build/libs/app.jar app.jar
-EXPOSE 9140
+EXPOSE 9170
 ENTRYPOINT ["java", "-jar", "app.jar"]

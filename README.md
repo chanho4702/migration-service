@@ -1,7 +1,7 @@
 # migration-service
 
 컨플루언스 설치형(Server/DC)·노션 원본을 읽어 우리 위키로 옮기는 이관 엔진. Spring Boot 4 ·
-Java 24 · PostgreSQL(`migrationdb`) · 포트 `9140`.
+Java 24 · PostgreSQL(`migrationdb`) · 포트 `9170`.
 
 위키에서 떼어 낸 서비스다(설계 `wiki-front/docs/superpowers/specs/2026-09-05-migration-service-split-design.md`).
 엔진은 원본을 읽고 우리 형식으로 눕히는 일만 하고, 실제 쓰기는 전부 위키의 내부 import
