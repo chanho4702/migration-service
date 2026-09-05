@@ -1,0 +1,23 @@
+{
+  "snapshotVersion": 1,
+  "content": {
+    "id": "10001",
+    "type": "page",
+    "status": "current",
+    "title": "서비스 운영 가이드",
+    "space": {
+      "key": "ENG",
+      "name": "Engineering"
+    },
+    "version": {
+      "number": 27,
+      "when": "2026-08-17T00:00:00.000Z"
+    },
+    "body": {
+      "storage": {
+        "representation": "storage",
+        "value": "<h1>서비스 운영 가이드</h1>\n<p><strong>운영 변경</strong> 전 <a href=\"https://example.com/runbook\">런북</a>을 확인하세요.</p>\n<ac:structured-macro ac:name=\"warning\"><ac:parameter ac:name=\"title\">운영 주의</ac:parameter><ac:rich-text-body><p>백업과 롤백 계획이 필요합니다.</p></ac:rich-text-body></ac:structured-macro>\n<ul><li>백업 확인</li><li>담당자 확인</li></ul>\n<ac:task-list><ac:task><ac:task-status>incomplete</ac:task-status><ac:task-body>복구 테스트 실행</ac:task-body></ac:task></ac:task-list>\n<ac:layout><ac:layout-section ac:type=\"two_equal\"><ac:layout-cell><p>왼쪽 절차</p></ac:layout-cell><ac:layout-cell><p>오른쪽 담당자</p></ac:layout-cell></ac:layout-section></ac:layout>\n<table><tbody><tr><th>단계</th><th>담당</th></tr><tr><td>검증</td><td>SRE</td></tr></tbody></table>\n<p><ac:link><ri:page ri:content-title=\"장애 대응 절차\" ri:space-key=\"OPS\"/><ac:plain-text-link-body><![CDATA[장애 대응 절차]]></ac:plain-text-link-body></ac:link></p>\n<ac:image ac:alt=\"서비스 토폴로지\" ac:width=\"960\"><ri:attachment ri:filename=\"topology.png\"/></ac:image>\n<ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\"><ac:parameter ac:name=\"key\">OPS-42</ac:parameter></ac:structured-macro>"
+      }
+    }
+  }
+}

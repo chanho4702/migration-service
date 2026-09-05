@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "documentId": "notion:workspace-acme:page-42",
+  "title": "배포 체크리스트",
+  "source": {
+    "provider": "notion",
+    "instanceId": "workspace-acme",
+    "objectId": "page-42",
+    "sourceVersion": "2026-03-11",
+    "capturedAt": "2026-08-16T01:00:00Z",
+    "checksum": "1111111111111111111111111111111111111111111111111111111111111111",
+    "payloadRef": "imports/notion/job-7/source/page-42.json"
+  },
+  "assets": [
+    {
+      "mediaId": "media-notion-diagram-1",
+      "sourceExternalId": "block-image-9",
+      "filename": "deployment-flow.png",
+      "contentType": "image/png",
+      "sizeBytes": 2048,
+      "checksum": "2222222222222222222222222222222222222222222222222222222222222222",
+      "role": "inline"
+    }
+  ],
+  "root": {
+    "id": "notion-root-page-42",
+    "type": "doc",
+    "content": [
+      {
+        "id": "notion-heading-1",
+        "type": "heading",
+        "attrs": {
+          "level": 1
+        },
+        "content": [
+          {
+            "id": "notion-text-1",
+            "type": "text",
+            "text": "배포 체크리스트"
+          }
+        ]
+      },
+      {
+        "id": "notion-paragraph-1",
+        "type": "paragraph",
+        "content": [
+          {
+            "id": "notion-text-2",
+            "type": "text",
+            "text": "운영 배포 전 승인 단계를 확인합니다.",
+            "marks": [
+              {
+                "type": "bold"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "notion-page-link-1",
+        "type": "pageLink",
+        "attrs": {
+          "label": "장애 대응 절차",
+          "target": {
+            "externalObjectId": "page-incident-runbook"
+          }
+        }
+      },
+      {
+        "id": "notion-image-1",
+        "type": "image",
+        "attrs": {
+          "mediaId": "media-notion-diagram-1",
+          "alt": "배포 흐름",
+          "caption": "검증 환경에서 운영 환경으로 이동하는 흐름"
+        }
+      },
+      {
+        "id": "notion-opaque-1",
+        "type": "opaque",
+        "attrs": {
+          "fallbackText": "지원하지 않는 synced database view"
+        },
+        "sourceRef": {
+          "provider": "notion",
+          "objectId": "block-synced-db-5",
+          "sourceType": "child_database",
+          "path": "/blocks/4",
+          "checksum": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      }
+    ]
+  }
+}

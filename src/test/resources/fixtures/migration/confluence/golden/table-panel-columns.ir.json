@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "documentId": "confluence-dc:golden-layout",
+  "title": "표·패널·컬럼",
+  "source": {
+    "provider": "confluence-dc",
+    "instanceId": "wiki.example.com",
+    "objectId": "20002",
+    "sourceVersion": "7",
+    "capturedAt": "2026-09-05T00:00:00Z",
+    "checksum": "2222222222222222222222222222222222222222222222222222222222222222",
+    "payloadRef": "dc:content/20002"
+  },
+  "assets": [],
+  "root": {
+    "id": "l:root",
+    "type": "doc",
+    "content": [
+      {
+        "id": "l:panel1",
+        "type": "panel",
+        "attrs": { "variant": "warning", "title": "운영 주의" },
+        "content": [
+          {
+            "id": "l:panel1p",
+            "type": "paragraph",
+            "content": [{ "id": "l:panel1t", "type": "text", "text": "백업과 롤백 계획이 필요합니다." }]
+          }
+        ]
+      },
+      {
+        "id": "l:panel2",
+        "type": "panel",
+        "attrs": { "variant": "tip" },
+        "content": [
+          {
+            "id": "l:panel2p",
+            "type": "paragraph",
+            "content": [{ "id": "l:panel2t", "type": "text", "text": "미리 점검하면 빠릅니다." }]
+          }
+        ]
+      },
+      {
+        "id": "l:table",
+        "type": "table",
+        "content": [
+          {
+            "id": "l:tr1",
+            "type": "tableRow",
+            "content": [
+              {
+                "id": "l:th1",
+                "type": "tableHeader",
+                "content": [
+                  {
+                    "id": "l:th1p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:th1t", "type": "text", "text": "단계" }]
+                  }
+                ]
+              },
+              {
+                "id": "l:th2",
+                "type": "tableHeader",
+                "content": [
+                  {
+                    "id": "l:th2p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:th2t", "type": "text", "text": "담당" }]
+                  }
+                ]
+              },
+              {
+                "id": "l:th3",
+                "type": "tableHeader",
+                "content": [
+                  {
+                    "id": "l:th3p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:th3t", "type": "text", "text": "비고" }]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l:tr2",
+            "type": "tableRow",
+            "content": [
+              {
+                "id": "l:td1",
+                "type": "tableCell",
+                "attrs": { "colSpan": 2 },
+                "content": [
+                  {
+                    "id": "l:td1p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:td1t", "type": "text", "text": "검증 · SRE" }]
+                  }
+                ]
+              },
+              {
+                "id": "l:td2",
+                "type": "tableCell",
+                "attrs": { "rowSpan": 2 },
+                "content": [
+                  {
+                    "id": "l:td2p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:td2t", "type": "text", "text": "공통" }]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l:tr3",
+            "type": "tableRow",
+            "content": [
+              {
+                "id": "l:td3",
+                "type": "tableCell",
+                "content": [
+                  {
+                    "id": "l:td3p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:td3t", "type": "text", "text": "배포" }]
+                  }
+                ]
+              },
+              {
+                "id": "l:td4",
+                "type": "tableCell",
+                "content": [
+                  {
+                    "id": "l:td4p",
+                    "type": "paragraph",
+                    "content": [{ "id": "l:td4t", "type": "text", "text": "플랫폼" }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "l:columns",
+        "type": "columns",
+        "content": [
+          {
+            "id": "l:col1",
+            "type": "column",
+            "content": [
+              {
+                "id": "l:col1p",
+                "type": "paragraph",
+                "content": [{ "id": "l:col1t", "type": "text", "text": "왼쪽 절차" }]
+              }
+            ]
+          },
+          {
+            "id": "l:col2",
+            "type": "column",
+            "attrs": { "width": 30 },
+            "content": [
+              {
+                "id": "l:col2p",
+                "type": "paragraph",
+                "content": [{ "id": "l:col2t", "type": "text", "text": "오른쪽 담당자" }]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

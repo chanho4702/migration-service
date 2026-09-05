@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "documentId": "confluence-dc:golden-opaque",
+  "title": "매크로·이미지·링크",
+  "source": {
+    "provider": "confluence-dc",
+    "instanceId": "wiki.example.com",
+    "objectId": "20003",
+    "sourceVersion": "2",
+    "capturedAt": "2026-09-05T00:00:00Z",
+    "checksum": "3333333333333333333333333333333333333333333333333333333333333333",
+    "payloadRef": "dc:content/20003"
+  },
+  "assets": [
+    {
+      "mediaId": "media-topology",
+      "sourceExternalId": "attachment:topology.png",
+      "filename": "topology.png",
+      "contentType": "image/png",
+      "sizeBytes": 20480,
+      "checksum": "4444444444444444444444444444444444444444444444444444444444444444",
+      "role": "inline"
+    },
+    {
+      "mediaId": "media-runbook",
+      "sourceExternalId": "attachment:runbook.pdf",
+      "filename": "runbook.pdf",
+      "contentType": "application/pdf",
+      "sizeBytes": 51200,
+      "checksum": "5555555555555555555555555555555555555555555555555555555555555555",
+      "role": "attachment"
+    }
+  ],
+  "root": {
+    "id": "o:root",
+    "type": "doc",
+    "content": [
+      {
+        "id": "o:p1",
+        "type": "paragraph",
+        "content": [
+          { "id": "o:p1a", "type": "text", "text": "자세한 절차는 " },
+          {
+            "id": "o:p1b",
+            "type": "pageLink",
+            "attrs": {
+              "label": "장애 대응 절차",
+              "target": { "externalObjectId": "ENG:장애 대응 절차" }
+            }
+          },
+          { "id": "o:p1c", "type": "text", "text": "를 보세요." }
+        ]
+      },
+      {
+        "id": "o:p2",
+        "type": "paragraph",
+        "content": [
+          { "id": "o:p2a", "type": "text", "text": "다른 스페이스: " },
+          {
+            "id": "o:p2b",
+            "type": "pageLink",
+            "attrs": {
+              "label": "운영 규정",
+              "target": { "externalObjectId": "OPS:운영 규정" }
+            }
+          }
+        ]
+      },
+      {
+        "id": "o:p3",
+        "type": "paragraph",
+        "content": [
+          {
+            "id": "o:p3a",
+            "type": "text",
+            "text": "중요",
+            "marks": [{ "type": "textColor", "attrs": { "color": "red" } }]
+          },
+          { "id": "o:p3b", "type": "text", "text": " / " },
+          {
+            "id": "o:p3c",
+            "type": "text",
+            "text": "강조",
+            "marks": [{ "type": "highlight", "attrs": { "color": "yellow" } }]
+          },
+          { "id": "o:p3d", "type": "text", "text": " / " },
+          {
+            "id": "o:p3e",
+            "type": "text",
+            "text": "밑줄",
+            "marks": [{ "type": "underline" }]
+          },
+          { "id": "o:p3f", "type": "text", "text": " / " },
+          {
+            "id": "o:p3g",
+            "type": "text",
+            "text": "팔레트밖",
+            "marks": [{ "type": "textColor", "attrs": { "color": "#ff00ff" } }]
+          }
+        ]
+      },
+      {
+        "id": "o:img",
+        "type": "image",
+        "attrs": { "mediaId": "media-topology", "alt": "서비스 토폴로지" }
+      },
+      {
+        "id": "o:file",
+        "type": "attachment",
+        "attrs": { "mediaId": "media-runbook", "label": "운영 런북" }
+      },
+      {
+        "id": "o:macro",
+        "type": "opaque",
+        "attrs": { "fallbackText": "지원하지 않는 Confluence 요소: ac:structured-macro[jira]" },
+        "sourceRef": {
+          "provider": "confluence-dc",
+          "objectId": "20003",
+          "sourceType": "ac:structured-macro[jira]",
+          "path": "/storage/ac:structured-macro[3]",
+          "checksum": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      }
+    ]
+  }
+}

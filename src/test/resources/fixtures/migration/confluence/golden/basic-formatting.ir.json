@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "documentId": "confluence-dc:golden-basic",
+  "title": "기본 서식",
+  "source": {
+    "provider": "confluence-dc",
+    "instanceId": "wiki.example.com",
+    "objectId": "20001",
+    "sourceVersion": "3",
+    "capturedAt": "2026-09-05T00:00:00Z",
+    "checksum": "1111111111111111111111111111111111111111111111111111111111111111",
+    "payloadRef": "dc:content/20001"
+  },
+  "assets": [],
+  "root": {
+    "id": "b:root",
+    "type": "doc",
+    "content": [
+      {
+        "id": "b:h1",
+        "type": "heading",
+        "attrs": { "level": 1 },
+        "content": [{ "id": "b:h1t", "type": "text", "text": "기본 서식" }]
+      },
+      {
+        "id": "b:h5",
+        "type": "heading",
+        "attrs": { "level": 5 },
+        "content": [{ "id": "b:h5t", "type": "text", "text": "다섯 번째 깊이" }]
+      },
+      {
+        "id": "b:p1",
+        "type": "paragraph",
+        "content": [
+          { "id": "b:p1a", "type": "text", "text": "굵게", "marks": [{ "type": "bold" }] },
+          { "id": "b:p1b", "type": "text", "text": " " },
+          { "id": "b:p1c", "type": "text", "text": "기울임", "marks": [{ "type": "italic" }] },
+          { "id": "b:p1d", "type": "text", "text": " " },
+          { "id": "b:p1e", "type": "text", "text": "취소", "marks": [{ "type": "strike" }] },
+          { "id": "b:p1f", "type": "text", "text": " " },
+          { "id": "b:p1g", "type": "text", "text": "코드", "marks": [{ "type": "code" }] },
+          { "id": "b:p1h", "type": "text", "text": " " },
+          {
+            "id": "b:p1i",
+            "type": "text",
+            "text": "런북",
+            "marks": [{ "type": "link", "attrs": { "href": "https://example.com/runbook" } }]
+          }
+        ]
+      },
+      {
+        "id": "b:p2",
+        "type": "paragraph",
+        "content": [
+          { "id": "b:p2a", "type": "text", "text": "첫 줄" },
+          { "id": "b:p2br", "type": "hardBreak" },
+          { "id": "b:p2b", "type": "text", "text": "둘째 줄" }
+        ]
+      },
+      {
+        "id": "b:ul",
+        "type": "bulletList",
+        "content": [
+          {
+            "id": "b:ul1",
+            "type": "listItem",
+            "content": [
+              {
+                "id": "b:ul1p",
+                "type": "paragraph",
+                "content": [{ "id": "b:ul1t", "type": "text", "text": "백업 확인" }]
+              }
+            ]
+          },
+          {
+            "id": "b:ul2",
+            "type": "listItem",
+            "content": [
+              {
+                "id": "b:ul2p",
+                "type": "paragraph",
+                "content": [{ "id": "b:ul2t", "type": "text", "text": "담당자 확인" }]
+              },
+              {
+                "id": "b:ul2n",
+                "type": "bulletList",
+                "content": [
+                  {
+                    "id": "b:ul2n1",
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "id": "b:ul2n1p",
+                        "type": "paragraph",
+                        "content": [{ "id": "b:ul2n1t", "type": "text", "text": "야간 담당" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b:ol",
+        "type": "orderedList",
+        "content": [
+          {
+            "id": "b:ol1",
+            "type": "listItem",
+            "content": [
+              {
+                "id": "b:ol1p",
+                "type": "paragraph",
+                "content": [{ "id": "b:ol1t", "type": "text", "text": "첫째" }]
+              }
+            ]
+          },
+          {
+            "id": "b:ol2",
+            "type": "listItem",
+            "content": [
+              {
+                "id": "b:ol2p",
+                "type": "paragraph",
+                "content": [{ "id": "b:ol2t", "type": "text", "text": "둘째" }]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b:tl",
+        "type": "taskList",
+        "content": [
+          {
+            "id": "b:tl1",
+            "type": "taskItem",
+            "attrs": { "checked": false },
+            "content": [
+              {
+                "id": "b:tl1p",
+                "type": "paragraph",
+                "content": [{ "id": "b:tl1t", "type": "text", "text": "복구 테스트 실행" }]
+              }
+            ]
+          },
+          {
+            "id": "b:tl2",
+            "type": "taskItem",
+            "attrs": { "checked": true },
+            "content": [
+              {
+                "id": "b:tl2p",
+                "type": "paragraph",
+                "content": [{ "id": "b:tl2t", "type": "text", "text": "롤백 계획 검토" }]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b:bq",
+        "type": "blockquote",
+        "content": [
+          {
+            "id": "b:bqp",
+            "type": "paragraph",
+            "content": [{ "id": "b:bqt", "type": "text", "text": "인용문입니다." }]
+          }
+        ]
+      },
+      {
+        "id": "b:code",
+        "type": "codeBlock",
+        "attrs": { "language": "ts" },
+        "content": [
+          { "id": "b:codet", "type": "text", "text": "const a = 1;", "marks": [{ "type": "code" }] }
+        ]
+      },
+      { "id": "b:hr", "type": "horizontalRule" },
+      {
+        "id": "b:p3",
+        "type": "paragraph",
+        "content": [
+          { "id": "b:p3a", "type": "text", "text": "담당은 " },
+          { "id": "b:p3b", "type": "mention", "attrs": { "label": "김철호" } },
+          { "id": "b:p3c", "type": "text", "text": "입니다." }
+        ]
+      }
+    ]
+  }
+}

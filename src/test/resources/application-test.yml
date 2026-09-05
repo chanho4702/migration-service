@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:migrationdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  test:
+    database:
+      replace: none   # @DataJpaTest가 이 yml의 H2 URL을 그대로 쓰게 한다
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/.well-known/jwks.json
+
+eureka:
+  client:
+    enabled: false
+
+platform:
+  jwt:
+    issuer: http://localhost:9000
+    audience: platform-api
+  org-grpc:
+    host: localhost
+    port: 9131
+  migration:
+    wiki:
+      # 실제 값은 WikiImportTestSupport가 가짜 서버 주소로 덮어쓴다.
+      base-uri: http://127.0.0.1:1
+      internal-token: test-internal-token
+    staging-dir: ${java.io.tmpdir}/migration-service-staging-test
+    worker:
+      enabled: false   # 스케줄러 자동 tick 금지 — worker 테스트가 시각을 직접 넣는다

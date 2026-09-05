@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+group = 'com.platform'
+version = '0.0.1-SNAPSHOT'
+java { toolchain { languageVersion = JavaLanguageVersion.of(24) } }
+tasks.withType(JavaCompile).configureEach { options.compilerArgs << '-parameters' }
+
+repositories {
+    // 미발행 common-proto를 로컬에서 먼저 물려 개발할 때만 켠다: -PuseMavenLocal
+    if (providers.gradleProperty('useMavenLocal').isPresent()) { mavenLocal() }
+    mavenCentral()
+    // 공유 아티팩트 소비 — GitHub Packages (로컬: GITHUB_TOKEN env, CI: GH_PACKAGES_TOKEN)
+    maven {
+        url = uri('https://maven.pkg.github.com/chanho4702/platform-backend')
+        credentials {
+            username = System.getenv('GITHUB_ACTOR') ?: 'chanho4702'
+            password = System.getenv('GITHUB_TOKEN') ?: providers.gradleProperty('gpr.token').getOrElse('')
+        }
+    }
+}
+
+ext { set('springCloudVersion', '2025.1.2') }
+ext { set('testcontainersVersion', '1.21.3') }
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        // Boot 4 BOM이 testcontainers 버전을 관리하지 않아 직접 가져온다
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
+}
+
+// wiki·alm·board와 같은 발행본을 본다(루트 확정 결정: 공유 아티팩트 버전은 하나).
+def sharedVersion = providers.gradleProperty('commonProtoVersion').getOrElse('0.16.0')
+def grpcVersion = '1.69.0'
+
+dependencies {
+    implementation "com.platform:common-proto:${sharedVersion}"
+    // 리소스 서버 공통(JWT 검증·오류 계약·공용 예외) — 서비스에 복제하지 않는다(S-02)
+    implementation "com.platform:common-starter:${sharedVersion}"
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // OpenAPI 3 스펙 생성(UI 없음) — wiki-backend와 같은 판을 쓴다.
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:3.0.3'
+    implementation 'org.springframework.boot:spring-boot-flyway'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    runtimeOnly 'org.postgresql:postgresql'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-data-jpa-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation "io.grpc:grpc-inprocess:${grpcVersion}"
+    // Flyway 마이그레이션 ↔ 엔티티 정합 검증용 실 Postgres — H2(create-drop)로는 못 잡는다
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testRuntimeOnly 'com.h2database:h2'
+}
+tasks.named('test') {
+    useJUnitPlatform()
+    // 골든 파일 재생성 스위치를 테스트 JVM까지 넘긴다: ./gradlew test -Dgolden.write=true
+    systemProperty 'golden.write', System.getProperty('golden.write', 'false')
+}
+tasks.named('bootJar') { archiveFileName = 'app.jar' }

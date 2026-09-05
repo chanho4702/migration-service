@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://platform.local/schemas/wiki/document-ir-v1.schema.json",
+  "title": "Wiki Document IR v1",
+  "description": "Notion·Confluence 가져오기와 공동 초안 projection을 위한 provider 중립 문서 계약",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "documentId", "title", "source", "assets", "root"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "documentId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "source": {
+      "$ref": "#/$defs/sourceMetadata"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "root": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/block"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "doc"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "checksum": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "instanceId", "objectId", "capturedAt", "checksum", "payloadRef"],
+      "properties": {
+        "provider": {
+          "enum": ["native", "notion", "confluence-dc"]
+        },
+        "instanceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "objectId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sourceVersion": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "checksum": {
+          "$ref": "#/$defs/checksum"
+        },
+        "payloadRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "objectId", "sourceType", "path", "checksum"],
+      "properties": {
+        "provider": {
+          "enum": ["notion", "confluence-dc"]
+        },
+        "objectId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sourceType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "checksum": {
+          "$ref": "#/$defs/checksum"
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mediaId", "filename", "contentType", "sizeBytes", "checksum", "role"],
+      "properties": {
+        "mediaId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "sourceExternalId": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "contentType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checksum": {
+          "$ref": "#/$defs/checksum"
+        },
+        "role": {
+          "enum": ["inline", "attachment", "source", "export"]
+        }
+      }
+    },
+    "mark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["bold", "italic", "strike", "code", "underline", "textColor", "highlight", "link"]
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "type": {
+          "enum": [
+            "doc",
+            "paragraph",
+            "heading",
+            "text",
+            "bulletList",
+            "orderedList",
+            "listItem",
+            "taskList",
+            "taskItem",
+            "blockquote",
+            "codeBlock",
+            "table",
+            "tableRow",
+            "tableHeader",
+            "tableCell",
+            "horizontalRule",
+            "hardBreak",
+            "panel",
+            "columns",
+            "column",
+            "image",
+            "attachment",
+            "pageLink",
+            "mention",
+            "opaque"
+          ]
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "text": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mark"
+          }
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "sourceRef": {
+          "$ref": "#/$defs/sourceRef"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "text"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["text"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["image", "attachment"]
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["attrs"],
+            "properties": {
+              "attrs": {
+                "required": ["mediaId"],
+                "properties": {
+                  "mediaId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "opaque"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["sourceRef"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "pageLink"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["attrs"],
+            "properties": {
+              "attrs": {
+                "required": ["target"],
+                "properties": {
+                  "target": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": ["internalPageId"]
+                      },
+                      {
+                        "required": ["externalObjectId"]
+                      },
+                      {
+                        "required": ["href"]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

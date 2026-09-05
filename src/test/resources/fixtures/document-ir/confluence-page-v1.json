@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "documentId": "confluence-dc:engineering:content-10001",
+  "title": "서비스 운영 가이드",
+  "source": {
+    "provider": "confluence-dc",
+    "instanceId": "engineering",
+    "objectId": "content-10001",
+    "sourceVersion": "27",
+    "capturedAt": "2026-08-16T01:05:00Z",
+    "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "payloadRef": "imports/confluence/job-8/source/content-10001.xhtml"
+  },
+  "assets": [
+    {
+      "mediaId": "media-confluence-topology-1",
+      "sourceExternalId": "attachment-30001:version-4",
+      "filename": "topology.png",
+      "contentType": "image/png",
+      "sizeBytes": 4096,
+      "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "role": "inline"
+    }
+  ],
+  "root": {
+    "id": "confluence-root-content-10001",
+    "type": "doc",
+    "content": [
+      {
+        "id": "confluence-heading-1",
+        "type": "heading",
+        "attrs": {
+          "level": 1
+        },
+        "content": [
+          {
+            "id": "confluence-text-1",
+            "type": "text",
+            "text": "서비스 운영 가이드"
+          }
+        ]
+      },
+      {
+        "id": "confluence-panel-1",
+        "type": "panel",
+        "attrs": {
+          "variant": "warning"
+        },
+        "content": [
+          {
+            "id": "confluence-paragraph-1",
+            "type": "paragraph",
+            "content": [
+              {
+                "id": "confluence-text-2",
+                "type": "text",
+                "text": "운영 변경 전 백업과 롤백 계획을 확인하세요."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "confluence-columns-1",
+        "type": "columns",
+        "content": [
+          {
+            "id": "confluence-column-left",
+            "type": "column",
+            "attrs": {
+              "widthPercent": 50
+            },
+            "content": [
+              {
+                "id": "confluence-paragraph-left",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "id": "confluence-text-left",
+                    "type": "text",
+                    "text": "담당자 확인"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "confluence-column-right",
+            "type": "column",
+            "attrs": {
+              "widthPercent": 50
+            },
+            "content": [
+              {
+                "id": "confluence-page-link-1",
+                "type": "pageLink",
+                "attrs": {
+                  "label": "장애 대응 절차",
+                  "target": {
+                    "externalObjectId": "content-10009",
+                    "spaceKey": "OPS",
+                    "title": "장애 대응 절차"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "confluence-image-1",
+        "type": "image",
+        "attrs": {
+          "mediaId": "media-confluence-topology-1",
+          "alt": "서비스 토폴로지",
+          "width": 960
+        }
+      },
+      {
+        "id": "confluence-opaque-1",
+        "type": "opaque",
+        "attrs": {
+          "fallbackText": "지원하지 않는 Jira custom macro"
+        },
+        "sourceRef": {
+          "provider": "confluence-dc",
+          "objectId": "content-10001",
+          "sourceType": "ac:structured-macro[jira]",
+          "path": "/storage/ac:structured-macro[2]",
+          "checksum": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    ]
+  }
+}
