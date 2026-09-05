@@ -41,8 +41,21 @@ FK도 없다.
 | GET | `/api/migration/{jobId}/items?status=&stage=&page=` | 대상 스페이스 ADMIN |
 | GET | `/api/migration/{jobId}/report` | 대상 스페이스 ADMIN |
 
-오류는 `{"error": 메시지}`(common-starter). org-service가 닿지 않으면 503이고, 그 밖의 권한
-실패는 fail-closed(403)다.
+오류는 `{"error": 메시지}`(common-starter). org-service나 위키가 닿지 않으면 503이고, 그 밖의 권한
+실패는 fail-closed(403)다. `/start`·`/cancel`·`/items`·`/discover`는 잡 상태가 맞지 않으면 409다
+(낙관적 락이 아니라 "이미 시작·종료된 작업"이라는 상태 충돌이다).
+
+### API 레퍼런스
+
+`GET /v3/api-docs`가 OpenAPI 3 스펙을 낸다. UI는 붙이지 않는다 — 사람이 브라우저로 보는 것이
+아니라 myFront `scripts/api`가 인증 없이 컨테이너 네트워크에서 긁어 가 문서 위키 페이지를 만드는
+입력이다. 게이트웨이·nginx가 `/v3`를 라우팅하지 않아 클러스터 밖에서는 닿지 않는다.
+
+공통 오류(401·403·503, 본문이 있으면 400, 경로 변수가 있으면 404)는 `OpenApiConfig`가 채우고,
+규칙으로 알 수 없는 것(상태 충돌 409, 본문의 id가 가리키는 대상의 404, 본문 없이 나는 400)은
+핸들러가 `@ApiFailures`로 직접 선언한다. `@ApiResponse`를 쓰지 않는 이유는 그것을 하나라도 달면
+springdoc이 성공 응답을 자동 생성하지 않아 2xx가 조용히 사라지기 때문이다 — `OpenApiDocsTest`가
+그 회귀와 인증 주체 누출을 함께 막는다.
 
 ## 위키 import API 호출 표
 

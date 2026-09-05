@@ -29,13 +29,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
+import com.platform.migrationservice.config.ApiFailures;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static com.platform.migrationservice.config.JwtPrincipal.userId;
 
-@Tag(name = "Migrations", description = "컨플루언스 이관 작업의 생성·실행·보고.")
+@Tag(name = "Migrations", description = """
+        컨플루언스 설치형(Server/DC) 원본을 위키로 옮기는 이관 작업의 생성·실행·보고.
+        연결 확인과 작업 목록은 전역 관리자만, 나머지는 대상 스페이스 ADMIN만 부를 수 있다.""")
 @RestController
 @RequestMapping("/api/migration")
 @RequiredArgsConstructor
@@ -59,6 +62,9 @@ public class MigrationController {
     }
 
     @Operation(summary = "이관 작업을 만든다")
+    // 대상 스페이스는 본문의 targetSpaceId가 가리키고 그 실재는 위키에 묻는다 — 경로 변수가
+    // 없어 공통 규칙이 404를 붙이지 못한다.
+    @ApiFailures("404")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MigrationJobResponse create(@AuthenticationPrincipal Jwt jwt,
@@ -67,6 +73,7 @@ public class MigrationController {
     }
 
     @Operation(summary = "이관할 원본 문서를 대기열에 넣는다")
+    @ApiFailures("409")
     @PostMapping("/{jobId}/items")
     @ResponseStatus(HttpStatus.CREATED)
     public MigrationItemResponse enqueue(@AuthenticationPrincipal Jwt jwt, @PathVariable long jobId,
@@ -76,18 +83,23 @@ public class MigrationController {
 
     /** 원본 트리를 훑어 대기열을 채운다. 다시 눌러도 새 항목만 늘어난다(멱등). */
     @Operation(summary = "원본 트리를 훑어 대기열을 채운다 — 다시 눌러도 새 항목만 늘어난다")
+    // 본문이 없어도 400이 난다 — 원본 응답을 이해할 수 없거나 주소가 다른 곳으로 넘길 때다.
+    @ApiFailures({"400", "409"})
     @PostMapping("/{jobId}/discover")
     public MigrationDiscoverResponse discover(@AuthenticationPrincipal Jwt jwt, @PathVariable long jobId) {
         return migrations.discover(userId(jwt), jobId, Instant.now());
     }
 
     @Operation(summary = "이관 작업을 시작한다")
+    // 본문이 없어도 400이 난다 — 발견을 건너뛴 채 시작하면 "옮길 항목이 없습니다"로 막힌다.
+    @ApiFailures({"400", "409"})
     @PostMapping("/{jobId}/start")
     public MigrationJobResponse start(@AuthenticationPrincipal Jwt jwt, @PathVariable long jobId) {
         return migrations.start(userId(jwt), jobId, Instant.now());
     }
 
     @Operation(summary = "진행 중인 이관 작업을 취소한다")
+    @ApiFailures("409")
     @PostMapping("/{jobId}/cancel")
     public MigrationJobResponse cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable long jobId) {
         return migrations.cancel(userId(jwt), jobId, Instant.now());

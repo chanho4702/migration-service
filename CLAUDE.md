@@ -46,6 +46,10 @@ API(`/internal/wiki/import`)를 거친다. 이 서비스의 DB에는 위키 테�
 - **알림을 발행하지 않는다.** 500페이지를 옮기면서 구독자에게 500통을 보내지 않는다 — import API가
   검색 색인 이벤트만 쏘도록 되어 있고, 그 정책은 위키 쪽에 있다.
 - 스키마 변경은 Flyway로만. `ddl-auto: validate`다.
+- **새 오퍼레이션에는 `@Operation(summary)`를 단다.** `/v3/api-docs`를 문서 생성기가 긁어 가므로
+  요약이 비면 "제목 없는 엔드포인트"가 레퍼런스에 실린다(`OpenApiDocsTest`가 먼저 깨진다).
+  공통 규칙으로 안 잡히는 실패 코드는 `@ApiResponse`가 아니라 `@ApiFailures`로 선언한다 —
+  `@ApiResponse`를 달면 springdoc이 성공 응답을 자동 생성하지 않아 2xx가 사라진다.
 
 ## 빌드/테스트
 

@@ -20,9 +20,15 @@ spring:
           jwk-set-uri: ${AUTH_JWKS_URI:http://localhost:9000/.well-known/jwks.json}
 
 springdoc:
-  # common-starter의 @RestControllerAdvice가 모든 오퍼레이션에 영문 400/409/503을 붙이지 않게 한다
-  # (wiki-backend와 같은 이유·같은 설정).
+  # 내부 전용 표면은 문서에 넣지 않는다. @RestController면 springdoc이 무조건 스캔하므로,
+  # 컨트롤러마다 빼는 대신 경로로 한 번에 끊는다 — 나중에 누가 /internal 컨트롤러를 더 만들어도
+  # 공개 API 레퍼런스로 새지 않는다(수집기가 이 스펙을 그대로 문서 위키에 싣는다).
+  paths-to-exclude: /internal/**
+  # 컨트롤러가 선언한 것과 OpenApiConfig의 공통 오류만 문서에 남긴다. 기본값(true)이면
+  # common-starter의 @RestControllerAdvice 핸들러가 모든 오퍼레이션에 400/409/415/503을
+  # 영문 설명과 Map<String,String> 스키마로 붙여, 생성기가 실제 계약과 다른 표를 그린다.
   override-with-generic-response: false
+  # 키 정렬 고정 — 수집한 스펙 JSON을 커밋하므로 diff가 코드 변경만 반영해야 한다.
   writer-with-order-by-keys: true
 
 eureka:
