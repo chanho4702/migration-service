@@ -3,6 +3,14 @@ server:
 spring:
   application:
     name: migration-service
+  cloud:
+    discovery:
+      client:
+        # 서비스 health는 자기 상태(db)만 본다 — 유레카/디스커버리 상태는 게이트웨이 대시보드가
+        # eureka 컴포넌트로 따로 프로브한다(설계 §3). 켜 두면 유레카가 잠깐 흔들릴 때
+        # 서비스 전체가 DOWN으로 보인다.
+        health-indicator:
+          enabled: false
   datasource:
     url: ${MIGRATION_DB_URL:jdbc:postgresql://localhost:5433/migrationdb}
     username: ${MIGRATION_DB_USERNAME:keycloak}
@@ -63,6 +71,25 @@ platform:
       max-history-version-bytes: ${MIGRATION_MAX_HISTORY_VERSION_BYTES:2097152}
     worker:
       enabled: ${MIGRATION_WORKER_ENABLED:true}
+
+# Actuator — 내부망 전용. 게이트웨이 관리자 대시보드(/api/platform/health)가 20초 캐시로 프로브한다.
+# health·info 둘만 노출하고(SecurityConfig에서 이 둘만 permitAll), 관리 포트는 따로 두지 않는다 —
+# dev 프로필(:19170)에서도 같은 포트에 붙는다. 외부 의존(원본 DC·org gRPC·위키 import)은
+# 인디케이터로 넣지 않는다: 헬스 프로브가 이관 대상 시스템에 부하를 주면 안 된다.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always   # 게이트웨이가 components.db 상태를 읽는다
+  info:
+    build:
+      enabled: true          # springBoot { buildInfo() }가 만든 build-info.properties
+  health:
+    eureka:
+      enabled: false         # 위와 같은 이유 — 유레카는 대시보드가 따로 본다
 
 logging:
   level:
