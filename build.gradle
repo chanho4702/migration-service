@@ -36,7 +36,7 @@ dependencyManagement {
 }
 
 // wiki·alm·board와 같은 발행본을 본다(루트 확정 결정: 공유 아티팩트 버전은 하나).
-def sharedVersion = providers.gradleProperty('commonProtoVersion').getOrElse('0.16.0')
+def sharedVersion = providers.gradleProperty('commonProtoVersion').getOrElse('0.17.0')
 def grpcVersion = '1.69.0'
 
 dependencies {

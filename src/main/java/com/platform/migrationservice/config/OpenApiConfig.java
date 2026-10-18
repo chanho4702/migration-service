@@ -14,6 +14,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +38,15 @@ import java.util.Map;
  */
 @Configuration
 public class OpenApiConfig {
+
+    /**
+     * common-starter 0.17.0의 /error 컨트롤러는 API가 아니다 — springdoc은 Boot 기본 BasicErrorController만
+     * 알아서 숨기므로 스타터 것은 직접 숨긴다.
+     */
+    static {
+        SpringDocUtils.getConfig().addHiddenRestControllers(com.platform.common.web.PlatformErrorController.class);
+    }
+
 
     /** common-starter의 오류 계약 — 어떤 실패든 바디는 이 모양 하나뿐이다. */
     static final String ERROR_SCHEMA = "PlatformError";

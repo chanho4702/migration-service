@@ -4,7 +4,7 @@
 
 이 리포에 적용되는 플랫폼 확정 결정(루트 `CLAUDE.md` "확정 설계 결정" 절 참고):
 
-- 리소스 서버 공통 규약은 `common-starter`(현재 `0.16.0`) — JWT 검증(JWKS + issuer/audience),
+- 리소스 서버 공통 규약은 `common-starter`(현재 `0.17.0`) — JWT 검증(JWKS + issuer/audience),
   `roles`→`ROLE_*` 변환, `{"error": 메시지}` 오류 계약, 공용 예외(`com.platform.common.error.*`)를
   서비스에 다시 복제하지 않는다. `SecurityFilterChain`(경로 정책)만 이 서비스가 가진다.
 - 공유 아티팩트 버전은 하나다 — wiki·alm·board와 같은 `common-proto`/`common-starter` 발행본을 본다.
