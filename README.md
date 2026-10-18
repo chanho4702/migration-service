@@ -110,6 +110,7 @@ Flyway `V1__migration_engine.sql` 하나다. 위키에 있던 V6·V7·V34·V35·
 | `WIKI_IMPORT_CONNECT_TIMEOUT` / `WIKI_IMPORT_REQUEST_TIMEOUT` | `PT10S` / `PT60S` | 요청 타임아웃(워커 lease 5분보다 짧게) |
 | `MIGRATION_STAGING_DIR` | `./data/migration-staging` | 첨부 스테이징. 컨테이너에서는 볼륨을 붙인다 |
 | `ORG_GRPC_HOST` / `ORG_GRPC_PORT` | `localhost` / `9131` | org-service gRPC |
+| `PLATFORM_GRPC_TOKEN` | (빈 값) | 서비스 간 gRPC 토큰(P-01). org 호출 메타데이터 `x-internal-token`에 싣는다. 플랫폼 공용 1개 |
 | `AUTH_JWKS_URI` | `http://localhost:9000/.well-known/jwks.json` | JWT 검증 |
 | `PLATFORM_ISSUER` / `PLATFORM_AUDIENCE` | `http://localhost:9000` / `platform-api` | JWT issuer·audience |
 | `EUREKA_URI` | `http://localhost:8761/eureka` | 서비스 등록 |
@@ -211,7 +212,7 @@ $env:JAVA_HOME = "C:\Program Files\Java\jdk-24"
 .\gradlew.bat bootJar --no-daemon    # build/libs/app.jar → Dockerfile이 복사
 ```
 
-GitHub Packages(`com.platform:common-proto`·`common-starter` `0.16.0`) 인증은 `GITHUB_TOKEN` env
+GitHub Packages(`com.platform:common-proto`·`common-starter` `0.17.0`) 인증은 `GITHUB_TOKEN` env
 또는 `~/.gradle/gradle.properties`의 `gpr.token`.
 
 ## 구조

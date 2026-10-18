@@ -4,6 +4,7 @@ import com.platform.migrationservice.migration.confluence.restriction.GrpcMigrat
 import com.platform.migrationservice.migration.confluence.restriction.MigrationPrincipalResolver;
 import com.platform.migrationservice.permission.GrpcPermissionClient;
 import com.platform.migrationservice.permission.PermissionClient;
+import com.platform.common.grpc.InternalTokenClientInterceptor;
 import com.platform.proto.org.v1.PermissionServiceGrpc;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,13 +42,18 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** org gRPC 채널 — 권한 판정과 주체 대조가 공유한다. */
+    /**
+     * org gRPC 채널 — 권한 판정과 주체 대조가 공유한다.
+     * 서비스 간 gRPC 토큰(P-01 단계 2): 모든 호출 메타데이터에 PLATFORM_GRPC_TOKEN을 싣는다(비면 안 싣는다).
+     */
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(name = "orgChannel")
     io.grpc.ManagedChannel orgChannel(
             @Value("${platform.org-grpc.host}") String host,
-            @Value("${platform.org-grpc.port}") int port) {
-        return ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+            @Value("${platform.org-grpc.port}") int port,
+            InternalTokenClientInterceptor platformGrpcClientInterceptor) {
+        return ManagedChannelBuilder.forAddress(host, port).usePlaintext()
+                .intercept(platformGrpcClientInterceptor).build();
     }
 
     /** 테스트는 FakePermissionClient(@Primary)가 이 빈을 대체한다. */
