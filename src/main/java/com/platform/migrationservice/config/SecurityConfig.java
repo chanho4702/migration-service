@@ -5,6 +5,7 @@ import com.platform.migrationservice.migration.confluence.restriction.MigrationP
 import com.platform.migrationservice.permission.GrpcPermissionClient;
 import com.platform.migrationservice.permission.PermissionClient;
 import com.platform.common.grpc.InternalTokenClientInterceptor;
+import com.platform.common.security.PlatformSecurityErrorHandlers;
 import com.platform.proto.org.v1.PermissionServiceGrpc;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,14 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));
+                // 401/403에도 플랫폼 본문 {"error"}를 싣는다(P-11). Security 기본은 본문이 없다.
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(converter))
+                        .authenticationEntryPoint(PlatformSecurityErrorHandlers.authenticationEntryPoint())
+                        .accessDeniedHandler(PlatformSecurityErrorHandlers.accessDeniedHandler()))
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(PlatformSecurityErrorHandlers.authenticationEntryPoint())
+                        .accessDeniedHandler(PlatformSecurityErrorHandlers.accessDeniedHandler()));
         return http.build();
     }
 
