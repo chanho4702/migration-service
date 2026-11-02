@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # 26.04 이미지의 Docker가 Testcontainers 1.21과 안 맞음(2026-11-02 CI 실측)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
