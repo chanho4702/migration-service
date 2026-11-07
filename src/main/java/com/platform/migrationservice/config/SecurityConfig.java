@@ -35,8 +35,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 내부망 전용 헬스/빌드정보 — 게이트웨이 대시보드가 인증 없이 프로브한다.
-                        // 노출은 이 둘뿐이다(management.endpoints.web.exposure.include).
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // 노출은 이 셋뿐이다(management.endpoints.web.exposure.include). prometheus는 Alloy가 긁는다.
+                        .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 // 401/403에도 플랫폼 본문 {"error"}를 싣는다(P-11). Security 기본은 본문이 없다.

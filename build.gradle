@@ -45,8 +45,9 @@ dependencies {
     implementation "com.platform:common-starter:${sharedVersion}"
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    // 헬스/빌드정보만 노출한다 — 내부망 전용(게이트웨이 관리자 대시보드가 프로브한다)
+    // 헬스/빌드정보/메트릭만 노출한다 — 내부망 전용(게이트웨이 관리자 대시보드가 프로브, 메트릭은 Alloy가 긁는다)
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

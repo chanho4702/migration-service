@@ -9,13 +9,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 게이트웨이 관리자 대시보드가 인증 없이 프로브하는 두 경로. 노출은 health·info뿐이고,
+ * 인증 없이 열리는 내부망 전용 경로. 노출은 health·info(대시보드 프로브)·prometheus(Alloy 스크레이프)뿐이고,
  * 원본 DC·org gRPC·위키 import는 인디케이터에 없다 — 프로브가 이관 대상에 부하를 주면 안 된다.
  */
 @SpringBootTest
@@ -42,6 +44,15 @@ class ActuatorHealthTest {
     @Test
     void infoIsPublic() throws Exception {
         mvc.perform(get("/actuator/info")).andExpect(status().isOk());
+    }
+
+    /** 메트릭은 Alloy가 내부망에서 토큰 없이 긁는다 — 서비스 태그가 붙어 나와야 한다. */
+    @Test
+    void prometheusIsPublicWithApplicationTag() throws Exception {
+        mvc.perform(get("/actuator/prometheus"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("jvm_memory_used_bytes")))
+                .andExpect(content().string(containsString("application=\"migration-service\"")));
     }
 
     @Test

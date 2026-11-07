@@ -73,14 +73,18 @@ platform:
       enabled: ${MIGRATION_WORKER_ENABLED:true}
 
 # Actuator — 내부망 전용. 게이트웨이 관리자 대시보드(/api/platform/health)가 20초 캐시로 프로브한다.
-# health·info 둘만 노출하고(SecurityConfig에서 이 둘만 permitAll), 관리 포트는 따로 두지 않는다 —
+# health·info·prometheus만 노출하고(SecurityConfig에서 이 셋만 permitAll — prometheus는 Alloy가 도커 내부망에서
+# 긁는다), 관리 포트는 따로 두지 않는다 —
 # dev 프로필(:19170)에서도 같은 포트에 붙는다. 외부 의존(원본 DC·org gRPC·위키 import)은
 # 인디케이터로 넣지 않는다: 헬스 프로브가 이관 대상 시스템에 부하를 주면 안 된다.
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}   # 모든 미터에 서비스 이름 태그(Grafana 서비스별 분리)
   endpoint:
     health:
       show-details: always   # 게이트웨이가 components.db 상태를 읽는다
